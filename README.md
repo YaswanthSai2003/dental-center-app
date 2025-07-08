@@ -68,7 +68,6 @@ All data is stored in the browser’s **localStorage**.
 
 ## How to Run Locally
 
-```bash
 git clone https://github.com/your-username/dental-center-dashboard.git
 cd dental-center-dashboard
 
