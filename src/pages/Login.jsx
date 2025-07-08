@@ -74,7 +74,7 @@ const Login = () => {
             type="email"
             value={email}
             onChange={(e) => setEmail(e.target.value)}
-            className="mt-1 block w-full border-gray-300 rounded-md"
+            className="mt-1 block w-full bg-white border border-gray-500 rounded-md focus:border-black"
             required
           />
         </label>
@@ -82,10 +82,10 @@ const Login = () => {
         <label className="block mb-4">
           <span className="text-gray-700 text-sm">Password</span>
           <input
-            type="password"
+            type="text"
             value={password}
             onChange={(e) => setPassword(e.target.value)}
-            className="mt-1 block w-full border-gray-300 rounded-md"
+            className="mt-1 block w-full bg-white border border-gray-500 rounded-md focus:border-black"
             required
           />
         </label>
