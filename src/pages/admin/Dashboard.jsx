@@ -1,3 +1,4 @@
+// src/pages/admin/Dashboard.jsx
 import React, { useEffect, useState } from "react";
 import Layout from "../../components/Layout";
 import { get } from "../../utils/storage";
@@ -11,36 +12,57 @@ const Dashboard = () => {
     setPatients(data);
   }, []);
 
+  // midnight today
   const today = new Date();
   today.setHours(0, 0, 0, 0);
 
+  // appointments exactly today
   const patientsToday = patients.filter((p) => {
     return p?.appointmentDate === format(today, "yyyy-MM-dd");
   });
 
+  // revenue from seed totalCost or history entries before today in this month
   const revenueThisMonth = patients.reduce((sum, patient) => {
-  if (!Array.isArray(patient.history)) return sum;
+    const now = new Date();
+    now.setHours(0, 0, 0, 0);
 
-  return (
-    sum +
-    patient.history.reduce((subSum, visit) => {
-      if (!visit.timestamp || visit.cost == null) return subSum;
+    let patientSum = 0;
 
-      const visitDate = new Date(visit.timestamp);
-      const now = new Date();
+    // 1) sum up all visits in history
+    if (Array.isArray(patient.history) && patient.history.length > 0) {
+      patientSum = patient.history.reduce((sub, visit) => {
+        if (!visit.appointmentDate || visit.cost == null) return sub;
+        const appt = new Date(visit.appointmentDate);
+        appt.setHours(0, 0, 0, 0);
 
-      return (
-        visitDate.getMonth() === now.getMonth() &&
-        visitDate.getFullYear() === now.getFullYear() &&
-        visitDate < today
-      )
-        ? subSum + visit.cost
-        : subSum;
-    }, 0)
-  );
-}, 0);
+        if (
+          appt < today &&
+          appt.getMonth() === now.getMonth() &&
+          appt.getFullYear() === now.getFullYear()
+        ) {
+          return sub + visit.cost;
+        }
+        return sub;
+      }, 0);
 
+    // 2) fallback to the legacy totalCost if no history present
+    } else if (patient.totalCost != null && patient.appointmentDate) {
+      const appt = new Date(patient.appointmentDate);
+      appt.setHours(0, 0, 0, 0);
 
+      if (
+        appt < today &&
+        appt.getMonth() === now.getMonth() &&
+        appt.getFullYear() === now.getFullYear()
+      ) {
+        patientSum = patient.totalCost;
+      }
+    }
+
+    return sum + patientSum;
+  }, 0);
+
+  // how many have appointments pending (in future)
   const pendingTreatments = patients.filter((p) => {
     const appt = new Date(p.appointmentDate || null);
     appt.setHours(0, 0, 0, 0);
@@ -51,8 +73,10 @@ const Dashboard = () => {
     );
   }).length;
 
+  // last 5 added
   const recentPatients = [...patients].slice(-5).reverse();
 
+  // upcoming next 5
   const upcomingPatients = [...patients]
     .filter((p) => {
       const appt = new Date(p.appointmentDate || null);
