@@ -1,7 +1,10 @@
+// src/pages/admin/PatientDetails.jsx
+
 import React, { useEffect, useState } from "react";
 import Layout from "../../components/Layout";
 import { get, set } from "../../utils/storage";
 import { useNavigate } from "react-router-dom";
+import { TREATMENT_OPTIONS } from "./RegisterPatient";  // ← for seeded-cost fallback
 
 export default function PatientDetails() {
   const [patients, setPatients] = useState([]);
@@ -33,7 +36,7 @@ export default function PatientDetails() {
       : dt.toLocaleString("en-IN", {
           day: "2-digit",
           month: "2-digit",
-          year: "numeric",
+          year: "2-digit",
           hour: "2-digit",
           minute: "2-digit",
         });
@@ -41,7 +44,8 @@ export default function PatientDetails() {
 
   const calcAge = (dob) => {
     if (!dob) return "—";
-    const birth = new Date(dob), today = new Date();
+    const birth = new Date(dob),
+      today = new Date();
     let age = today.getFullYear() - birth.getFullYear();
     const m = today.getMonth() - birth.getMonth();
     if (m < 0 || (m === 0 && today.getDate() < birth.getDate())) age--;
@@ -92,12 +96,26 @@ export default function PatientDetails() {
                     .includes(search.toLowerCase())
                 )
                 .map((p) => {
-                  const lastHist = Array.isArray(p.history) && p.history.length
-                    ? p.history[p.history.length - 1]
-                    : null;
-
+                  // Determine last visit & its files
+                  const lastHist =
+                    Array.isArray(p.history) && p.history.length
+                      ? p.history[p.history.length - 1]
+                      : null;
                   const lastVisit = lastHist?.timestamp || p.appointmentDate;
                   const files = lastHist?.files || [];
+
+                  // Compute fallback cost if p.totalCost is missing
+                  let displayCost = 0;
+                  if (p.totalCost != null) {
+                    displayCost = p.totalCost;
+                  } else if (Array.isArray(p.history) && p.history.length) {
+                    displayCost = p.history.reduce((sum, h) => sum + (h.cost || 0), 0);
+                  } else if (Array.isArray(p.treatmentPlan)) {
+                    displayCost = p.treatmentPlan.reduce((sum, t) => {
+                      const opt = TREATMENT_OPTIONS.find((o) => o.name === t);
+                      return sum + (opt?.cost || 0);
+                    }, 0);
+                  }
 
                   return (
                     <tr key={p.id} className="border-b hover:bg-gray-50">
@@ -107,10 +125,9 @@ export default function PatientDetails() {
                       <td className="p-2">{calcAge(p.dob)}</td>
                       <td className="p-2">{p.contact}</td>
                       <td className="p-2">{p.healthInfo}</td>
-                      <td className="p-2">₹{p.totalCost ?? 0}</td>
+                      <td className="p-2">₹{displayCost}</td>
                       <td className="p-2">{p.history?.length || 0}</td>
                       <td className="p-2">{fmtDateTime(lastVisit)}</td>
-                      {/* Files Column */}
                       <td className="p-2">
                         {files.length > 0 ? (
                           <ul className="space-y-1">
