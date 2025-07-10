@@ -1,3 +1,4 @@
+// src/pages/admin/RegisterPatient.jsx
 import React, { useEffect, useRef, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import Layout from "../../components/Layout";
@@ -5,7 +6,7 @@ import { get, set } from "../../utils/storage";
 import RegisterForm from "./RegisterForm";
 import PastIncidents from "./PastIncidents";
 
-// Generate ID
+// Generate a new patient ID
 const generatePatientID = () => {
   const now = new Date();
   const datePart = now.toLocaleDateString("en-CA").replace(/-/g, "");
@@ -13,7 +14,7 @@ const generatePatientID = () => {
   return `ENT-${datePart}-${tsPart}`;
 };
 
-// Treatment Options
+// Treatment options and costs
 export const TREATMENT_OPTIONS = [
   { name: "General Checkup", cost: 500 },
   { name: "Tooth Cleaning", cost: 1000 },
@@ -22,12 +23,12 @@ export const TREATMENT_OPTIONS = [
   { name: "Surgery Consultation", cost: 2500 },
 ];
 
-// Status Options
+// Status options for each incident
 export const STATUS_OPTIONS = [
   "Ongoing",
   "Recovered",
-  "Process",
-  "Results Await",
+  "In Process",
+  "Results Awaited",
 ];
 
 export default function RegisterPatient() {
@@ -35,6 +36,7 @@ export default function RegisterPatient() {
   const isEdit = Boolean(editId);
   const navigate = useNavigate();
 
+  // default form state
   const [form, setForm] = useState({
     id: generatePatientID(),
     fullName: "",
@@ -50,7 +52,7 @@ export default function RegisterPatient() {
     incidentFiles: [],
     history: [],
     totalCost: 0,
-    status: "Ongoing",
+    status: STATUS_OPTIONS[0],
   });
 
   const [errors, setErrors] = useState({});
@@ -63,27 +65,63 @@ export default function RegisterPatient() {
     treatmentPlan: useRef(),
   };
 
+  // Load existing patient when editing
   useEffect(() => {
-    if (!isEdit) return;
+  if (!isEdit) return;
+  const pts = get("patients") || [];
+  const patient = pts.find((p) => p.id === editId);
+  if (!patient) {
+    alert("Patient not found");
+    return navigate("/admin/patients");
+  }
 
-    const pts = get("patients") || [];
-    const patient = pts.find((p) => p.id === editId);
-    if (!patient) {
-      alert("Patient not found");
-      return navigate("/admin/patients");
-    }
+  // Compute cost of the "session" from the treatmentPlan
+  const sessionCost = (patient.treatmentPlan || []).reduce((sum, t) => {
+    const opt = TREATMENT_OPTIONS.find((o) => o.name === t);
+    return sum + (opt?.cost || 0);
+  }, 0);
 
-    const cost = (patient.treatmentPlan || []).reduce((s, t) => {
-      const opt = TREATMENT_OPTIONS.find((o) => o.name === t);
-      return s + (opt?.cost || 0);
-    }, 0);
+  // Build initial history if none exists
+  let history = Array.isArray(patient.history) ? [...patient.history] : [];
+  if (history.length === 0 && patient.appointmentDate && sessionCost > 0) {
+    history = [
+      {
+        // Use lastUpdated if you have it, otherwise now
+        timestamp: patient.lastUpdated || new Date().toISOString(),
+        appointmentDate: patient.appointmentDate,
+        treatmentPlan: patient.treatmentPlan || [],
+        cost: sessionCost,
+        title:    patient.incidentTitle    || "",
+        description: patient.incidentDescription || "",
+        comments: patient.incidentComments || "",
+        files:    patient.incidentFiles     || [],
+        status:   patient.status            || STATUS_OPTIONS[0],
+      },
+    ];
+  }
 
-    setForm({ ...patient, sessionCost: cost });
-  }, [isEdit, editId, navigate]);
+  // Recompute totalCost from history
+  const totalCost = history.reduce((sum, h) => sum + (h.cost || 0), 0);
 
+  // Now merge everything into the form
+  setForm((prev) => ({
+    ...prev,
+    ...patient,
+    sessionCost,
+    history,
+    totalCost,
+    // ensure these aren’t ever undefined:
+    incidentFiles: patient.incidentFiles || [],
+    status:        patient.status        || STATUS_OPTIONS[0],
+  }));
+}, [isEdit, editId, navigate]);
+
+
+  // Handle form submission (new patient or adding visit)
   const handleSubmit = (e) => {
     e.preventDefault();
 
+    // simple validation
     const errs = {};
     if (!form.fullName.trim()) errs.fullName = "Full name is required";
     if (!form.dob) errs.dob = "Date of birth is required";
@@ -91,17 +129,18 @@ export default function RegisterPatient() {
     if (!form.appointmentDate) errs.appointmentDate = "Appointment date is required";
     if (!form.treatmentPlan.length) errs.treatmentPlan = "Choose at least one treatment";
 
-    if (Object.keys(errs).length > 0) {
+    if (Object.keys(errs).length) {
       setErrors(errs);
       const first = Object.keys(errs)[0];
-      refs[first]?.current?.scrollIntoView({ behavior: "smooth", block: "center" });
-      refs[first]?.current?.focus();
+      refs[first].current.scrollIntoView({ behavior: "smooth", block: "center" });
+      refs[first].current.focus();
       return;
     }
 
     const allPatients = get("patients") || [];
     const timestamp = new Date().toISOString();
 
+    // build the new visit (incident)
     const visit = {
       timestamp,
       appointmentDate: form.appointmentDate,
@@ -114,6 +153,7 @@ export default function RegisterPatient() {
       status: form.status,
     };
 
+    // determine upcoming array
     const todayStr = new Date().toISOString().split("T")[0];
     const isFuture = form.appointmentDate > todayStr;
     const upcoming = isFuture
@@ -121,24 +161,23 @@ export default function RegisterPatient() {
       : [];
 
     let updatedPatients;
-
     if (isEdit) {
+      // append visit to existing patient
       updatedPatients = allPatients.map((p) => {
         if (p.id !== form.id) return p;
-
         const newHistory = [...(p.history || []), visit];
-        const total = newHistory.reduce((sum, h) => sum + h.cost, 0);
-
+        const newTotal = newHistory.reduce((sum, h) => sum + h.cost, 0);
         return {
           ...p,
           ...form,
           history: newHistory,
-          totalCost: total,
+          totalCost: newTotal,
           lastUpdated: timestamp,
           upcoming: isFuture ? [...(p.upcoming || []), ...upcoming] : p.upcoming || [],
         };
       });
     } else {
+      // create brand‑new patient record
       updatedPatients = [
         ...allPatients,
         {
@@ -151,6 +190,7 @@ export default function RegisterPatient() {
       ];
     }
 
+    // persist and navigate back
     set("patients", updatedPatients);
     navigate("/admin/patients");
   };
@@ -177,7 +217,6 @@ export default function RegisterPatient() {
           <PastIncidents history={form.history} setPreviewUrl={setPreviewUrl} />
         )}
 
-        {/* Fullscreen Image Preview */}
         {previewUrl && (
           <div
             className="fixed inset-0 bg-black bg-opacity-80 z-50 flex items-center justify-center"
