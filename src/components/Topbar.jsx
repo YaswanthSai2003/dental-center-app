@@ -1,4 +1,3 @@
-// src/components/Topbar.jsx
 import React from "react";
 import { useAuth } from "../context/AuthContext";
 
