@@ -7,6 +7,7 @@ const Topbar = ({ onMobileMenuToggle }) => {
 
   return (
     <div className="fixed top-0 left-0 right-0 h-16 bg-white px-6 flex items-center justify-between z-40 shadow-sm">
+      {/* Left: Logo and Menu */}
       <div className="flex items-center gap-3">
         <button
           className="sm:hidden block text-gray-700 mr-2"
@@ -24,6 +25,7 @@ const Topbar = ({ onMobileMenuToggle }) => {
         </h1>
       </div>
 
+      {/* Right: Welcome text */}
       <div className="text-sm text-gray-600 hidden sm:block">
         Welcome, <strong>{user?.fullName}</strong>
       </div>
