@@ -31,13 +31,15 @@ const Sidebar = ({ collapsed, setCollapsed, mobileOpen, setMobileOpen }) => {
 
   return (
     <>
-      {mobileOpen && (
-        <div
-          className="fixed inset-0 bg-black bg-opacity-40 z-40 sm:hidden"
-          onClick={() => setMobileOpen(false)}
-        ></div>
-      )}
+      {/* Mobile overlay */}
+      <div
+        className={`fixed inset-0 bg-black bg-opacity-40 z-40 transition-opacity sm:hidden ${
+          mobileOpen ? "block" : "hidden"
+        }`}
+        onClick={() => setMobileOpen(false)}
+      ></div>
 
+      {/* Sidebar itself */}
       <div
         className={`fixed top-16 left-0 h-[calc(100vh-64px)] bg-white flex flex-col z-50 transition-all duration-300 ${
           mobileOpen
@@ -47,8 +49,11 @@ const Sidebar = ({ collapsed, setCollapsed, mobileOpen, setMobileOpen }) => {
             : "w-64"
         } ${mobileOpen ? "sm:relative" : "hidden sm:flex"}`}
       >
+        {/* Header */}
         <div className="flex items-center justify-between p-4 border-b">
-          {!collapsed && <h2 className="text-lg font-bold text-gray-700">MENU</h2>}
+          {!collapsed && (
+            <h2 className="text-lg font-bold text-gray-700">MENU</h2>
+          )}
           <button
             onClick={() => {
               if (window.innerWidth < 640) {
@@ -66,14 +71,13 @@ const Sidebar = ({ collapsed, setCollapsed, mobileOpen, setMobileOpen }) => {
           </button>
         </div>
 
+        {/* Navigation Links */}
         <nav className="flex-1 px-2 py-4 space-y-1 overflow-y-auto">
           {navItems.map(({ to, icon, label }) => (
             <NavLink
               key={to}
               to={to}
-              onClick={() => {
-                if (window.innerWidth < 640) setMobileOpen(false);
-              }}
+              onClick={() => setMobileOpen(false)}
               className={({ isActive }) =>
                 `flex items-center gap-3 px-3 py-2 rounded-md transition ${
                   isActive ? "text-red-600 font-semibold" : "text-gray-700"
@@ -86,6 +90,7 @@ const Sidebar = ({ collapsed, setCollapsed, mobileOpen, setMobileOpen }) => {
           ))}
         </nav>
 
+        {/* Logout */}
         <div className="p-4 mt-auto">
           <button
             onClick={logout}
