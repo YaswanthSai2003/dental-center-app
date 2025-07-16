@@ -11,8 +11,7 @@ import {
 } from "react-icons/md";
 import { useAuth } from "../context/AuthContext";
 
-const Sidebar = () => {
-  const [collapsed, setCollapsed] = useState(false);
+const Sidebar = ({ collapsed, setCollapsed }) => {
   const { logout, user } = useAuth();
 
   // Routes based on role
