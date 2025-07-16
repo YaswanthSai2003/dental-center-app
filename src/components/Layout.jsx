@@ -1,4 +1,3 @@
-// src/components/Layout.jsx
 import React, { useState, useEffect } from "react";
 import Sidebar from "./Sidebar";
 import Topbar from "./Topbar";
@@ -12,15 +11,14 @@ const Layout = ({ children }) => {
     localStorage.setItem("sidebarCollapsed", collapsed);
   }, [collapsed]);
 
-  // Sidebar widths
-  const collapsedWidth = 64;      // 4rem
+  const collapsedWidth = 64;   
   const expandedWidth = window.innerWidth <= 640
-    ? window.innerWidth * 0.6  // 60% on mobile
-    : 256;                     // 16rem on desktop
+    ? window.innerWidth * 0.6  
+    : 256;                     
 
   return (
     <div className="min-h-screen bg-gray-50">
-      <Topbar />
+      
 
       <div className="flex pt-16">
         <Sidebar collapsed={collapsed} setCollapsed={setCollapsed} />
