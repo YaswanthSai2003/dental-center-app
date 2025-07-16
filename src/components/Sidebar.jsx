@@ -1,4 +1,3 @@
-// src/components/Sidebar.jsx
 import React from "react";
 import { NavLink } from "react-router-dom";
 import { FiMenu, FiLogOut } from "react-icons/fi";
@@ -28,7 +27,6 @@ const Sidebar = ({ collapsed, setCollapsed }) => {
   ];
   const navItems = user?.role === "Admin" ? adminLinks : patientLinks;
 
-  // width: 4rem when collapsed; 60vw on mobile, 16rem otherwise
   const widthClass = collapsed
     ? "w-16"
     : "w-[60vw] sm:w-64";
@@ -37,7 +35,7 @@ const Sidebar = ({ collapsed, setCollapsed }) => {
     <div
       className={`fixed top-16 bottom-0 left-0 bg-white flex flex-col justify-between z-30 transition-all duration-300 ${widthClass}`}
     >
-      {/* header + toggle */}
+      { }
       <div>
         <div className="flex items-center justify-between p-4 border-b">
           {!collapsed && <h2 className="text-lg font-bold text-gray-700">MENU</h2>}
@@ -48,7 +46,9 @@ const Sidebar = ({ collapsed, setCollapsed }) => {
           />
         </div>
 
-        {/* nav links */}
+        {
+          
+        }
         <nav className="flex-1 overflow-y-auto px-2 py-4 space-y-1">
           {navItems.map(({ to, icon, label }) => (
             <NavLink
@@ -67,7 +67,9 @@ const Sidebar = ({ collapsed, setCollapsed }) => {
         </nav>
       </div>
 
-      {/* logout always visible at bottom */}
+      {
+        
+      }
       <div className="p-4 border-t">
         {collapsed ? (
           <button
