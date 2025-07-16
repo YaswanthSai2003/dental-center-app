@@ -31,15 +31,14 @@ const Sidebar = ({ collapsed, setCollapsed }) => {
 
   return (
     <div
-      className="fixed top-16 left-0 z-40 bg-white"
+      className="fixed top-16 left-0 z-40 bg-white flex flex-col overflow-hidden"
       style={{
         width: sidebarWidth,
         height: "calc(100vh - 64px)",
-        display: "flex",
-        flexDirection: "column",
       }}
     >
-      <div className="flex items-center justify-between p-4">
+      
+      <div className="flex items-center justify-between p-4 shrink-0">
         {!collapsed && <h2 className="text-lg font-bold text-gray-700">MENU</h2>}
         <FiMenu
           size={20}
@@ -48,7 +47,6 @@ const Sidebar = ({ collapsed, setCollapsed }) => {
         />
       </div>
 
-      
       <div className="flex-1 overflow-y-auto px-2 pb-2 space-y-1">
         {links.map(({ to, icon, label }) => (
           <NavLink
@@ -66,7 +64,7 @@ const Sidebar = ({ collapsed, setCollapsed }) => {
         ))}
       </div>
 
-      <div className="p-4 mt-auto">
+      <div className="p-4 shrink-0">
         <button
           onClick={logout}
           title="Logout"
