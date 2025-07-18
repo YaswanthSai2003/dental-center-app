@@ -11,35 +11,41 @@ const Layout = ({ children }) => {
     localStorage.setItem("sidebarCollapsed", collapsed);
   }, [collapsed]);
 
-  const collapsedWidth = 64;  
-  const expandedWidth = 256;  
+  const collapsedWidth = 64;
+  const expandedWidth = 256;
 
   return (
     <div className="h-screen bg-gray-50 overflow-hidden">
+      {/* Topbar */}
       <Topbar />
 
+      {/* Main body with Sidebar + Content */}
       <div
         className="flex"
         style={{
-          paddingTop: 64,                
-          height: "calc(100vh - 64px)",  
+          paddingTop: 64, // height of Topbar
+          height: "calc(100vh - 64px)",
         }}
       >
-        <Sidebar
-          collapsed={collapsed}
-          setCollapsed={setCollapsed}
-        />
+        {/* Sidebar with dynamic width */}
+        <div
+          style={{
+            width: collapsed ? collapsedWidth : expandedWidth,
+            transition: "width 0.3s ease",
+          }}
+        >
+          <Sidebar collapsed={collapsed} setCollapsed={setCollapsed} />
+        </div>
 
+        {/* Main content area */}
         <main
-  className="p-4 overflow-y-auto"
-  style={{
-    marginLeft: collapsed ? collapsedWidth : expandedWidth,
-    height: "calc(100vh - 64px)", 
-  }}
->
-  {children}
-</main>
-
+          className="p-4 overflow-y-auto flex-1"
+          style={{
+            height: "calc(100vh - 64px)",
+          }}
+        >
+          {children}
+        </main>
       </div>
     </div>
   );
